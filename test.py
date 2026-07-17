@@ -19,6 +19,14 @@ def analyze_signal_levels_pandas(data, threshold=1.5, min_run_length=1):
     df = pd.DataFrame({"voltage": data})
     df["pos"] = range(len(df))
 
+    df["high_level"] = (df["voltage"] > threshold_high).astype(int)  # 1=High, 0=Low
+    df["low_level"] = (df["voltage"] < threshold_low).astype(int)  # 1=High, 0=Low
+    df["normal_level"] = (df["voltage"] > threshold_low) & (
+        df["voltage"] < threshold_high
+    ).astype(
+        int
+    )  # 1=Normal, 0=High or Low
+
     # 二值化
     df["level"] = (df["voltage"] > threshold).astype(int)  # 1=High, 0=Low
 
