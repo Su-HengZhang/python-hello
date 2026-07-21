@@ -11,24 +11,32 @@ plt.rcParams["font.sans-serif"] = [
 plt.rcParams["axes.unicode_minus"] = False
 
 
-def analyze_signal_levels_pandas(data, threshold=1.5, min_run_length=1):
+def analyze_signal_levels_pandas(
+    data,
+    threshold_high=0.35,
+    threshold_low=0.05,
+    min_run_length=1,
+):
     """
     使用 Pandas 优化的信号电平分析函数
     """
     # 转换为 DataFrame
-    df = pd.DataFrame({"voltage": data})
+    df = pd.DataFrame(data, columns=["ch0", "ch1"])
     df["pos"] = range(len(df))
 
-    df["high_level"] = (df["voltage"] > threshold_high).astype(int)  # 1=High, 0=Low
-    df["low_level"] = (df["voltage"] < threshold_low).astype(int)  # 1=High, 0=Low
-    df["normal_level"] = (df["voltage"] > threshold_low) & (
-        df["voltage"] < threshold_high
+    threshold = (threshold_low + threshold_high) / 2
+
+    df["high_level"] = (df["ch1"] > threshold_high).astype(int)  # 1=High, 0=Low
+    df["low_level"] = (df["ch1"] < threshold_low).astype(int) * (-1)  # 0=High, 1=Low
+
+    df["normal_level"] = (df["ch1"] > threshold_low) & (
+        df["ch1"] < threshold_high
     ).astype(
         int
     )  # 1=Normal, 0=High or Low
 
     # 二值化
-    df["level"] = (df["voltage"] > threshold).astype(int)  # 1=High, 0=Low
+    df["level"] = (df["ch1"] > threshold).astype(int)  # 1=High, 0=Low
 
     # 检测电平变化（翻转点）
     df["change"] = df["level"].diff().ne(0)  # True 表示发生变化
@@ -42,10 +50,10 @@ def analyze_signal_levels_pandas(data, threshold=1.5, min_run_length=1):
             end=("pos", "max"),
             length=("pos", "count"),
             level=("level", "first"),
-            mean_voltage=("voltage", "mean"),
-            std_voltage=("voltage", "std"),
-            min_voltage=("voltage", "min"),
-            max_voltage=("voltage", "max"),
+            mean_voltage=("ch1", "mean"),
+            std_voltage=("ch1", "std"),
+            min_voltage=("ch1", "min"),
+            max_voltage=("ch1", "max"),
         )
         .reset_index(drop=True)
     )
@@ -74,12 +82,12 @@ def analyze_signal_levels_pandas(data, threshold=1.5, min_run_length=1):
 if __name__ == "__main__":
     # ================== 生成测试数据 ==================
     data = np.load("./acquired_results.npy")
-    data = np.array(data.ravel())
+    data = np.array(data.reshape(-1, 2))
+    # data = data[:, 1]
 
     # ================== 分析 ==================
     df, segments, flip_count = analyze_signal_levels_pandas(
         data,
-        threshold=0.0,
         min_run_length=5,
     )
 
@@ -96,7 +104,7 @@ if __name__ == "__main__":
 
     # ====================== 可视化 ======================
     plt.figure(figsize=(15, 6))
-    plt.plot(df["voltage"], label="原始电压信号", linewidth=1.5)
+    plt.plot(df["ch1"], "*-", label="原始电压信号", linewidth=1.5)
     plt.plot(df["segment_id"] * 2, "r--", label="段编号 (台阶)", linewidth=2)
 
     for _, row in segments.iterrows():
