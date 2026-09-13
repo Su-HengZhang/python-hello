@@ -88,11 +88,11 @@ if __name__ == "__main__":
 
     # ====================== 可视化 ======================
     plt.figure(figsize=(15, 6))
-    plt.plot(df["voltage"], label="原始电压信号", linewidth=1.5)
+    plt.plot(df["voltage"],"*", label="原始电压信号", linewidth=1.5)
     plt.plot(df["segment_id"] * 2, "r--", label="段编号 (台阶)", linewidth=2)
 
-    for _, row in segments.iterrows():
-        plt.axvline(row["start"], color="red", linestyle=":", alpha=0.6)
+    # for _, row in segments.iterrows():
+    #     plt.axvline(row["start"], color="red", linestyle=":", alpha=0.6)
 
     plt.xlabel("采样点序号")
     plt.ylabel("电压 / 段编号")
