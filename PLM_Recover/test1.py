@@ -24,14 +24,16 @@ def analyze_signal_levels_pandas(
     df = pd.DataFrame(data, columns=["ch0", "ch1"])
     # 通过Flag信号的状态，筛选基底播放区间的测量数据
     df = df.query("ch1 > @threshold_high or ch1 < @threshold_low")
+    print(len(df))
 
     # Flag信号二值化
     threshold = (threshold_low + threshold_high) / 2
-    df["ch1"] = (df["ch1"] > threshold).astype(int)  # 1=High, 0=Low
+    df["changes"] = (df["ch1"] > threshold).astype(int)  # 1=High, 0=Low
 
-    df["ch1"] = df["ch1"].diff().ne(0).cumsum().astype(int)
+    df["segment_id"] = df["changes"].diff().ne(0).cumsum().astype(int)
+    print(df["segment_id"])
 
-    df_clean = df.groupby("ch1").head(frame_length)
+    df_clean = df.groupby("segment_id").head(frame_length)
 
     return df_clean["ch0"].values
 
@@ -45,10 +47,12 @@ if __name__ == "__main__":
 
     # ================== 分析 ==================
     mdata = analyze_signal_levels_pandas(data)
+    print(len(mdata))
 
     # ====================== 可视化 ======================
     plt.figure(figsize=(15, 6))
-    plt.plot(mdata, "*-", label="原始电压信号", linewidth=1.5)
+    plt.plot(data[:,1], "*-", label="原始Flag信号", linewidth=1.5)
+    plt.plot(mdata, "*-", label="电压信号", linewidth=1.5)
 
     plt.xlabel("采样点序号")
     plt.ylabel("电压")

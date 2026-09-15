@@ -107,9 +107,7 @@ def twin_prime_s_matrix(p, q=None):
     #    0, q, 2q, ..., (p-1)q
     # --------------------------------------------------
 
-    zero_positions.extend(
-        j * q for j in range(p)
-    )
+    zero_positions.extend(j * q for j in range(p))
 
     # 去重，防止潜在重复
     zero_positions = sorted(set(zero_positions))
@@ -141,6 +139,7 @@ def twin_prime_s_matrix(p, q=None):
 
     return S
 
+
 if __name__ == "__main__":
     from numpy import fft
 
@@ -150,7 +149,7 @@ if __name__ == "__main__":
     # print(first_row)
     s = twin_prime_s_matrix(p, q)
 
-    f = np.arange(p * q)+1j*np.random.randint(0, 10, p * q)
+    f = np.arange(p * q) + 1j * np.random.randint(0, 10, p * q)
     print(f)
 
     g = s @ f
@@ -159,12 +158,12 @@ if __name__ == "__main__":
     S_last_row = fft.fft(s[-1])
     # 计算 g 的离散傅里叶变换
     G = fft.fft(g)
-    # 重建f序列的频谱 
-    Fr = G/S_last_row
+    # 重建f序列的频谱
+    Fr = G / S_last_row
     fr = fft.ifft(Fr)
     fr = fr[::-1]
     print(np.real(fr))
+    print(np.imag(fr))
     # 计算重建误差的范数
-    residual = np.linalg.norm(fr-f)
+    residual = np.linalg.norm(fr - f)
     print(residual)
-    
