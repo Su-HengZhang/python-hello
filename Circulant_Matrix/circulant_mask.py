@@ -1,4 +1,6 @@
+import os
 import numpy as np
+from PIL import Image
 
 
 def legendre_table(m: int) -> np.ndarray:
@@ -78,8 +80,175 @@ def twin_prime_s_row(p: int, q: int) -> np.ndarray:
     return result
 
 
-# def dmd_mask((p: int, q: int), (dmd_row: int = 1080, dmd_col: int = 1920)) -> np.ndarray:
-#     pass
+def mask_tape(p: int, q: int) -> np.ndarray:
+    """
+    根据孪生素数 p、q 构造长度 (p+1)*q 的 0/1 序列。
+
+    要求：
+        p、q 一对孪生素数
+        q = p + 2
+    """
+
+    s = twin_prime_s_row(p, q)
+    mask0 = s.reshape((p, q))
+
+    masks = []
+    for i in range(p):
+        mask = np.roll(mask0, -i, axis=0)
+        masks.append(mask)
+    masks.append(mask0[:, :-1])
+    tape = np.hstack(masks)
+
+    return tape
+
+
+def dmd_images(
+    p: int,
+    q: int,
+    nbin: int = 2,
+    dir_path: str = "dmd_images",
+    dmd_row: int = 1080,
+    dmd_col: int = 1920,
+):
+    # 创建图片目录
+    full_dir_path = f"{dir_path}_p{p}_q{q}_nbin{nbin}"
+    try:
+        os.makedirs(full_dir_path, exist_ok=True)
+    except Exception as e:
+        print(f"创建目录失败: {e}")
+        return
+    # 生成掩模带, 然后将每个像素扩展为 nbin x nbin 的微镜块
+    tape = mask_tape(p, q)
+    tape = tape.repeat(nbin, axis=0).repeat(nbin, axis=1)
+
+    # 整条掩模带的行数与列数
+    tape_row, tape_col = tape.shape
+
+    # 将掩模带放置在 DMD 的中央区域(行)
+    dmd_center_row = dmd_row // 2  # DMD 图像中心行
+    row_beg = dmd_center_row - tape_row // 2  # 起始行
+    row_end = row_beg + tape_row  # 结束行
+
+    # 将掩模带分割为若干个 pattern，每个pattern的列数为 pat_col
+    pat_col = (dmd_col // nbin) * nbin  # 每个 pattern 的列数必须是 nbin 的整数倍
+
+    # 将掩模带分割为若干个完整的 pattern 后， 剩余的列数
+    rem_cols = tape_col % pat_col
+    # 存储全部 pattern (包括最后一个不完整的 pattern) 的DMD图像数量
+    img_num = tape_col // pat_col if rem_cols == 0 else tape_col // pat_col + 1
+
+    # 初始化 pattern 和 img 为全0数组
+    pattern = np.zeros((tape_row, pat_col), dtype=np.uint8)
+    img = np.zeros((dmd_row, dmd_col), dtype=np.uint8)
+    for i in range(img_num):
+        # 对于最后一个不完整的 pattern， 只取tape最后剩余的列数
+        if (rem_cols != 0) and (i == img_num - 1):
+            pattern[:, :] = 0  # 清零
+            pattern[:, 0:rem_cols] = tape[:, i * pat_col : (i * pat_col + rem_cols)]
+        else:
+            pattern[:, :] = tape[:, i * pat_col : (i + 1) * pat_col]
+
+        # 将 pattern 放置在 DMD 图像的中央区域(行)
+        img[row_beg:row_end, 0:pat_col] = pattern
+
+        # 将图像保存为二值 BMP 文件
+        filename = os.path.join(full_dir_path, f"{i:05}.bmp")
+        im = Image.fromarray(img.astype(bool))
+        im.save(filename)
+
+
+def dmd_images_diff(
+    p: int,
+    q: int,
+    nbin: int = 2,
+    diff: bool = True,
+    dir_path: str = "dmd_images",
+    dmd_row: int = 1080,
+    dmd_col: int = 1920,
+):
+    # 创建图片目录
+    full_dir_path = f"{dir_path}_p{p}_q{q}_nbin{nbin}"
+    if diff == True:
+        full_dir_path = full_dir_path + "_diff"
+    # 创建目录
+    try:
+        os.makedirs(full_dir_path, exist_ok=True)
+    except Exception as e:
+        print(f"创建目录失败: {e}")
+        return
+
+    # 生成掩模带, 然后将每个像素扩展为 nbin x nbin 的微镜块
+    tape = mask_tape(p, q)
+    tape = tape.repeat(nbin, axis=0).repeat(nbin, axis=1)
+
+    # 整条掩模带的行数与列数
+    tape_row, tape_col = tape.shape
+
+    # 将掩模带放置在 DMD 的中央区域(行)
+    dmd_center_row = dmd_row // 2  # DMD 图像中心行
+    row_beg = dmd_center_row - tape_row // 2  # 起始行
+    row_end = row_beg + tape_row  # 结束行
+
+    # 将掩模带分割为若干个 pattern，每个pattern的列数为 pat_col
+    pat_col = (dmd_col // nbin) * nbin  # 每个 pattern 的列数必须是 nbin 的整数倍
+
+    # 将掩模带分割为若干个完整的 pattern 后， 剩余的列数
+    rem_cols = tape_col % pat_col
+    # 存储全部 pattern (包括最后一个不完整的 pattern) 的DMD图像数量
+    img_num = tape_col // pat_col if rem_cols == 0 else tape_col // pat_col + 1
+
+    # 初始化 pattern 和 img 为全0数组
+    pattern = np.zeros((tape_row, pat_col), dtype=np.uint8)
+    img = np.zeros((dmd_row, dmd_col), dtype=np.bool)
+    for i in range(img_num):
+        # 对于最后一个不完整的 pattern， 只取tape最后剩余的列数
+        if (rem_cols != 0) and (i == img_num - 1):
+            pattern[:, :] = 0  # 清零
+            pattern[:, 0:rem_cols] = tape[:, i * pat_col : (i * pat_col + rem_cols)]
+        else:
+            pattern[:, :] = tape[:, i * pat_col : (i + 1) * pat_col]
+
+        if diff == False:
+            # 若 diff 为 False，则只生成 pattern_pos 的图像
+            pattern_pos = pattern.copy().astype(bool)
+            # 将 pattern_pos 放置在 DMD 图像的中央区域(行)
+            img[row_beg:row_end, 0:pat_col] = pattern_pos
+            # 将图像保存为二值 BMP 文件
+            filename = os.path.join(full_dir_path, f"{i:05}.bmp")
+            im = Image.fromarray(img)
+            im.save(filename)
+        else:
+            # 若 diff 为 True，则生成 pattern_pos 和 pattern_neg 的图像
+            pattern_pos = pattern.copy().astype(bool)
+            pattern_neg = np.logical_not(pattern_pos)
+            # 将 pattern_pos 放置在 DMD 图像的中央区域(行)
+            img[row_beg:row_end, 0:pat_col] = pattern_pos
+            # 将图像保存为二值 BMP 文件
+            filename = os.path.join(full_dir_path, f"{2*i:05}.bmp")
+            im = Image.fromarray(img)
+            im.save(filename)
+
+            # 将 pattern_neg 放置在 DMD 图像的中央区域(行)
+            img[row_beg:row_end, 0:pat_col] = pattern_neg
+            # 将图像保存为二值 BMP 文件
+            filename = os.path.join(full_dir_path, f"{2*i+1:05}.bmp")
+            im = Image.fromarray(img)
+            im.save(filename)
+
+    # 解决最后一张差分负图案，因直接取反，引起其尾部，无掩模区域，0/1反转问题
+    # 重新生成正确图案，将上面生成的错误图案覆写
+    if (rem_cols != 0) and (diff == True):
+        pattern[:, :] = 0  # 清零
+        n = img_num - 1
+        pattern[:, 0:rem_cols] = 1 - tape[:, n * pat_col : (n * pat_col + rem_cols)]
+        pattern_neg = pattern.copy().astype(bool)
+
+        # 将 pattern_neg 放置在 DMD 图像的中央区域(行)
+        img[row_beg:row_end, 0:pat_col] = pattern_neg
+        # 将图像保存为二值 BMP 文件
+        filename = os.path.join(full_dir_path, f"{2*n+1:05}.bmp")
+        im = Image.fromarray(img)
+        im.save(filename)
 
 
 if __name__ == "__main__":
@@ -91,16 +260,7 @@ if __name__ == "__main__":
     """
 
     # 测试
-    p = 3
-    q = 5
-
-    s = twin_prime_s_row(p, q)
-    mask0 = s.reshape((p, q))
-
-    masks = []
-    for i in range(p):
-        mask = np.roll(mask0, -i, axis=0)
-        masks.append(mask)
-    masks.append(mask0)
-    pattern = np.hstack(masks)
-    print(pattern)
+    p = 239
+    q = 241
+    nbin = 4
+    dmd_images_diff(p, q, nbin)

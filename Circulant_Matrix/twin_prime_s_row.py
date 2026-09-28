@@ -124,7 +124,7 @@ if __name__ == "__main__":
     # (1481, 1483) (1487, 1489)
 
     # 测试
-    p, q = 11, 13  # 孪生素数对
+    p, q = 5, 7  # 孪生素数对
 
     M = p * q  # S 循环矩阵的阶数
     print(f"S matrix order: {M}")
@@ -145,9 +145,12 @@ if __name__ == "__main__":
 
     # 验证 S 循环矩阵的快速傅里变换重建性质
     first_row = twin_prime_s_row(p, q)
+    print(f"First row of S matrix:\n {first_row.reshape((p, q))}")
     # 左移 M-1 位 <=> 右移1位   得到最后一行
     # last_row = np.roll(first_row, -(M - 1))
     last_row = np.roll(first_row, 1)
+    print(f"Last row of S matrix:\n {last_row.reshape((p, q))}")
+    # 左移 M-1 位 <=> 右移1位   得到最后一行
 
     # 计算 S 循环矩阵最后一行的离散傅里叶变换
     spectrum_last_row = fft.fft(last_row)
