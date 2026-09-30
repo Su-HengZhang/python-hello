@@ -3,7 +3,7 @@ import numpy as np
 
 def legendre_table(m: int) -> np.ndarray:
     """
-    生成模 m 的 Legendre 符号查找表。
+    生成模 m (m为奇素数) 的 Legendre 符号查找表。
 
     tbl[n]：
         0   -> n ≡ 0 (mod m)
@@ -109,7 +109,6 @@ def hadamard_matrix(s_matrix: np.ndarray) -> np.ndarray:
 
 
 if __name__ == "__main__":
-
     from numpy import fft
 
     # 前50对孪生素数：

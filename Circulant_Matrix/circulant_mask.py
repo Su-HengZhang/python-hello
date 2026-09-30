@@ -5,7 +5,7 @@ from PIL import Image
 
 def legendre_table(m: int) -> np.ndarray:
     """
-    生成模 m 的 Legendre 符号查找表。
+    生成模 m (m为奇素数) 的 Legendre 符号查找表。
 
     tbl[n]：
         0   -> n ≡ 0 (mod m)
@@ -224,14 +224,14 @@ def dmd_images_diff(
             # 将 pattern_pos 放置在 DMD 图像的中央区域(行)
             img[row_beg:row_end, 0:pat_col] = pattern_pos
             # 将图像保存为二值 BMP 文件
-            filename = os.path.join(full_dir_path, f"{2*i:05}.bmp")
+            filename = os.path.join(full_dir_path, f"{2 * i:05}.bmp")
             im = Image.fromarray(img)
             im.save(filename)
 
             # 将 pattern_neg 放置在 DMD 图像的中央区域(行)
             img[row_beg:row_end, 0:pat_col] = pattern_neg
             # 将图像保存为二值 BMP 文件
-            filename = os.path.join(full_dir_path, f"{2*i+1:05}.bmp")
+            filename = os.path.join(full_dir_path, f"{2 * i + 1:05}.bmp")
             im = Image.fromarray(img)
             im.save(filename)
 
@@ -246,7 +246,7 @@ def dmd_images_diff(
         # 将 pattern_neg 放置在 DMD 图像的中央区域(行)
         img[row_beg:row_end, 0:pat_col] = pattern_neg
         # 将图像保存为二值 BMP 文件
-        filename = os.path.join(full_dir_path, f"{2*n+1:05}.bmp")
+        filename = os.path.join(full_dir_path, f"{2 * n + 1:05}.bmp")
         im = Image.fromarray(img)
         im.save(filename)
 
