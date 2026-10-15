@@ -94,14 +94,28 @@ def s_matrix(p: int, q: int) -> np.ndarray:
     return s_matrix
 
 
-def hadamard_matrix(s_matrix: np.ndarray) -> np.ndarray:
+def g_matrix(p: int, q: int) -> np.ndarray:
     """
-    根据 S 矩阵构造 Hadamard 矩阵。
+    根据孪生素数 p、q 构造 G 矩阵。
+    """
+    N = p * q
+    s = s_matrix(p, q)
 
-    """
-    N = s_matrix.shape[0]
     J = np.ones((N, N), dtype=np.int8)
-    G = J - 2 * s_matrix
+    G = J - 2 * s
+
+    return G
+
+
+def hadamard_matrix(p: int, q: int) -> np.ndarray:
+    """
+    根据孪生素数 p、q 构造 Hadamard 矩阵。
+    """
+    N = p * q
+    s = s_matrix(p, q)
+
+    J = np.ones((N, N), dtype=np.int8)
+    G = J - 2 * s
     H = np.ones((N + 1, N + 1), dtype=np.int8)
     H[1:, 1:] = G
 
@@ -136,8 +150,13 @@ if __name__ == "__main__":
     if np.array_equal(s @ s.T, (N / 4) * (np.eye(M) + np.ones((M, M)))):
         print(f"S matrix is valid.\n S @ S.T = \n{s @ s.T}")
 
+    # 验证 G 循环矩阵的性质 S @ S.T = (N / 4) * (I + J)
+    g = g_matrix(p, q).astype(np.int64)
+    print("G*G.T matrix:")
+    print(g @ g.T)
+
     # 验证 由 S 循环矩阵生成的Hadamard矩阵的性质 H @ H.T = N * I
-    H = hadamard_matrix(s)
+    H = hadamard_matrix(p, q)
     H = H.astype(np.int64)
     if np.array_equal(H @ H.T, N * np.eye(N)):
         print(f"Hadamard matrix is valid.\n H @ H.T = \n{H @ H.T}")

@@ -260,7 +260,7 @@ if __name__ == "__main__":
     """
 
     # 测试
-    p = 239
-    q = 241
-    nbin = 4
+    p = 29
+    q = 31
+    nbin = 30
     dmd_images_diff(p, q, nbin)
