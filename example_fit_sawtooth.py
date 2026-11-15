@@ -37,6 +37,9 @@ positions, envelope_values = fit_sawtooth_extrema(
     envelope_degree=6,
 )
 
+np.save("positions.npy", positions)
+np.save("data.npy", data_arr[n, :, 1])
+
 print("positions 形状:      ", positions.shape)
 print("envelope_values 形状:", envelope_values.shape)
 print("前 5 个位置:  ", np.round(positions[:5], 1))
@@ -54,12 +57,20 @@ fig, ax = plt.subplots(figsize=(12, 4.5))
 ax.plot(data, lw=0.7, label="Original data")
 ax.plot(positions, envelope_values, "r-", lw=1.2, alpha=0.6, label="Envelope (line)")
 ax.scatter(
-    positions[is_peak], envelope_values[is_peak],
-    s=14, c="tab:red", zorder=3, label="Envelope @ peaks (fitted)",
+    positions[is_peak],
+    envelope_values[is_peak],
+    s=14,
+    c="tab:red",
+    zorder=3,
+    label="Envelope @ peaks (fitted)",
 )
 ax.scatter(
-    positions[~is_peak], envelope_values[~is_peak],
-    s=14, c="tab:orange", zorder=3, label="Envelope @ valleys (from adjacent peaks)",
+    positions[~is_peak],
+    envelope_values[~is_peak],
+    s=14,
+    c="tab:orange",
+    zorder=3,
+    label="Envelope @ valleys (from adjacent peaks)",
 )
 ax.set_xlabel("Sample index")
 ax.set_ylabel("Signal amplitude")

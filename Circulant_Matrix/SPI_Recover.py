@@ -61,7 +61,7 @@ print(y_neg.max(), y_neg.min(), y_neg.mean())
 # 添加噪声
 rng1 = np.random.default_rng(seed=17)
 rng2 = np.random.default_rng(seed=4)
-sigma = 0.1 * obj_mean
+sigma = 0.01 * obj_mean
 
 noise_pos = rng1.normal(loc=0, scale=sigma, size=(N, 1))
 noise_neg = rng2.normal(loc=0, scale=sigma, size=(N, 1))

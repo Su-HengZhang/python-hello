@@ -1,10 +1,11 @@
-import cv2
+# import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 
 from utils.smask import s_matrix, g_matrix
 from utils.datalc import load_bin
 from utils.fit_sawtooth import fit_sawtooth_extrema
+from utils.estimate_signal import estimate_signal
 
 ################################################################################
 # 循环矩阵参数
@@ -89,7 +90,10 @@ neg_data = []
 ind = np.arange(active_len)
 for n in range(total_segs):
     positions = peak_position_list[n]
-    data = np.interp(positions, ind, data_arr[n, :, 1])
+    # 插值
+    # data = np.interp(positions, ind, data_arr[n, :, 1])
+    # 最小二乘估计
+    data, _, _ = estimate_signal(data_arr[n, :, 1], positions)
     # 补充最后一个数据点
     data = np.append(data, data[-1])
     # 去掉前q-1个无效数据点
