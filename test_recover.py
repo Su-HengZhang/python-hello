@@ -10,6 +10,8 @@ N = p * q
 s = twin_prime_s_row(p, q)  # s 循环矩阵的第1行
 s = np.roll(s, 1)  # 通过循环右移1列，得到 s 循环矩阵的最后1行
 g = np.ones_like(s) - 2 * s  # 由s循环矩阵最后1行，计算出g循环矩阵最后1行
+g = -g
+np.save(f"./results/g_last_row.npy", g)
 
 # 加载测量数据
 img_pos_data = np.load("./results/pos_data_0.npy")
@@ -18,12 +20,18 @@ img_pos_data = img_pos_data[:N]
 img_neg_data = img_neg_data[:N]
 img_data = img_pos_data - img_neg_data  # 计算差分信号
 
-
 # 滤波重建
 g_fft = fft.fft(g)
 img_data_fft = fft.fft(img_data)
 
-img_fft = img_data_fft / g_fft
+
+# img_fft = img_data_fft / g_fft
+
+# 设定正则化参数 K（可根据实际噪声水平调整，例如 1e-3 ~ 1e-1）
+K = 1e0 * np.max(np.abs(g_fft) ** 2)
+
+# 维纳滤波公式
+img_fft = (img_data_fft * np.conj(g_fft)) / (np.abs(g_fft) ** 2 + K)
 
 img_recover = fft.ifft(img_fft)
 img_recover = img_recover.reshape(p, q)
