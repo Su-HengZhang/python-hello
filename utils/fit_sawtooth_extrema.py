@@ -164,6 +164,7 @@ def fit_sawtooth_extrema(
 
     peak_pos = global_positions[is_peak]
     peak_val = ys[extrema_idx[is_peak]]
+    peak_val_mean = peak_val.mean()  # 波峰值的均值，用于反映该段数据对应转镜的反射率
 
     envelope = _robust_cheb_fit(peak_pos, peak_val, envelope_degree)
 
@@ -181,4 +182,4 @@ def fit_sawtooth_extrema(
         global_positions[~is_peak], peak_pos, env_at_peaks
     )
 
-    return global_positions, envelope_values
+    return global_positions, peak_val_mean, envelope_values

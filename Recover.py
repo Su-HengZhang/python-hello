@@ -22,7 +22,6 @@ gmatrix = g_matrix(p, q)
 ################################################################################
 BIN_FILE = "./data/2026-11-07-data-frame1/acq_20261107_180021.bin"
 # BIN_FILE = "./data/2026-11-09-data-frame120/acq_20261109_162051.bin"
-# BIN_FILE = "./data/2026-11-09-data-frame120/acq_20261109_162255.bin"
 seg_len = 12000
 active_start = 500
 active_len = 4800
@@ -63,6 +62,7 @@ def try_segment_fit(data, ratios):
 prominence_ratios = [0.3, 0.25, 0.2, 0.15, 0.1, 0.05]
 
 peak_position_list = []
+envelope_list = []
 failed_list = []
 
 for n in range(total_segs):
@@ -71,15 +71,21 @@ for n in range(total_segs):
 
     if positions is not None:
         peak_position_list.append(positions)
+        envelope_list.append(envelope)
     else:
         print(f"段 {n} 在所有 prominence_ratio 条件下拟合均失败")
         failed_list.append(n)
         peak_position_list.append(None)
+        envelope_list.append(None)
 
 if failed_list:
     raise RuntimeError(f"以下数据段在所有轮次中均拟合失败: {failed_list}")
 
 print("所有数据段都成功拟合！")
+
+envelope_stacked = np.stack(envelope_list, axis=0)
+print(envelope_stacked.shape)
+np.save(f"./results/envelope_stacked.npy", envelope_stacked)
 
 
 ################################################################################
@@ -113,8 +119,8 @@ for n in range(frame_num):
     img_neg_data = neg_data[n * frame_segs // 2 : (n + 1) * frame_segs // 2]
     img_pos_data = np.concatenate(img_pos_data)
     img_neg_data = np.concatenate(img_neg_data)
-    np.save(f"./results/pos_data_{n}.npy", img_pos_data)
-    np.save(f"./results/neg_data_{n}.npy", img_neg_data)
+    # np.save(f"./results/pos_data_{n}.npy", img_pos_data)
+    # np.save(f"./results/neg_data_{n}.npy", img_neg_data)
     img_data = img_pos_data - img_neg_data
     # img_data = img_pos_data
     img_data = img_data[:N]

@@ -1,8 +1,8 @@
 import numpy as np
-from numpy import fft
 from matplotlib import pyplot as plt
 
 from utils.smask import twin_prime_s_row
+from utils.reconstruction import direct_reconstruct, reconstruct_with_envelope
 
 p, q = 41, 43
 N = p * q
@@ -16,21 +16,18 @@ img_pos_data = np.load("./results/pos_data_0.npy")
 img_neg_data = np.load("./results/neg_data_0.npy")
 img_pos_data = img_pos_data[:N]
 img_neg_data = img_neg_data[:N]
-img_data = img_pos_data - img_neg_data  # 计算差分信号
+img_data = img_neg_data - img_pos_data  # 计算差分信号
+
+# 滤波重建
+re_img1 = direct_reconstruct(p, q, img_data)
+
+# 考虑Envelope 精确重建
+envelope = np.load("./results/page_envelope.npy")  # 加载Envelope
+re_img2 = reconstruct_with_envelope(p, q, img_data, envelope)
 
 
 # 滤波重建
-g_fft = fft.fft(g)
-img_data_fft = fft.fft(img_data)
-
-img_fft = img_data_fft / g_fft
-
-img_recover = fft.ifft(img_fft)
-img_recover = img_recover.reshape(p, q)
-
-fig, ax = plt.subplots(nrows=4, ncols=1, figsize=(10, 6))
-ax[0].plot(np.abs(img_data_fft))
-ax[1].plot(np.abs(g_fft))
-ax[2].plot(np.abs(img_fft))
-ax[3].imshow(np.real(img_recover))
+fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(10, 6))
+ax[0].imshow(re_img1)
+ax[1].imshow(re_img2)
 plt.show()
